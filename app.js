@@ -1,18 +1,13 @@
-const boardPieces = document.querySelectorAll(".board-piece");
-
 const gameBoard = (() => {
-    let board = [];
-
+    let board;
     const generateBoard = () => {
         board = Array(3).fill().map(() => Array(3).fill());
     }
-
     const clearGame = () => {
         playerX.resetScore();
         playerO.resetScore();
         endRound();
     }
-
     const endRound = () => {
         boardPieces.forEach(key => {
             key.innerText = "";
@@ -20,7 +15,6 @@ const gameBoard = (() => {
         generateBoard();
         displayController.updateScoreboard();
     }
-
     const getBoard = () => {
         let i = 0;
         for(let x = 0; x < 3; x++){
@@ -31,14 +25,8 @@ const gameBoard = (() => {
         }
         return board;
     }
-
     const checkWin = (playr) => {
         getBoard();
-
-        if(board[0].indexOf("") === -1 && board[1].indexOf("") === -1 && board[2].indexOf("") === -1) {
-            alert("Draw!");
-            endRound();
-        }
 
         let arr = [];
         for(let x = 0; x < 3; x++){
@@ -50,7 +38,7 @@ const gameBoard = (() => {
                 if (arr[0] === arr[1] && arr[1] === arr[2]){
                     playr.increaseScore();
                     endRound();
-                    return;
+                    return true;
                 }
             }
         }
@@ -63,7 +51,7 @@ const gameBoard = (() => {
                 if (arr[0] === arr[1] && arr[1] === arr[2]){
                     playr.increaseScore();
                     endRound();
-                    return;
+                    return true;
                 }
             }
         }
@@ -71,15 +59,23 @@ const gameBoard = (() => {
             if (board[0][0] === board[1][1] && board[1][1] === board[2][2]){
                 playr.increaseScore();
                 endRound();
-                return;
+                return true;
             }
         }
         if (board[2][0] !== "" || board[1][1] !== "" || board[0][2]!== "") {
             if (board[2][0] === board[1][1] && board[1][1] === board[0][2]){
                 playr.increaseScore();
                 endRound();
-                return;
+                return true;
             }
+        }
+        if(board[0].indexOf("") === -1 && board[1].indexOf("") === -1 && board[2].indexOf("") === -1) {
+            alert("Draw!");
+            endRound();
+            if(playr === currentPlayer) {
+                displayController.computerPlay();
+            }
+            return;
         }
     }
 
@@ -92,11 +88,8 @@ const gameBoard = (() => {
 })();
 
 const displayController = (() => {
-    const playerChoose = (id, playerName) => {
-        document.getElementById(id).innerText = playerName;
-    }
     const updateScoreboard = () => {
-        document.querySelector(".score").innerText = `X : ${playerX.getScore()} - O : ${playerO.getScore()}`;
+        document.querySelector(".score").innerText = `${playerX.getScore()} - ${playerO.getScore()}`;
     }
     const randomNine = () => {
         return Math.floor(Math.random() * 9);
@@ -113,7 +106,6 @@ const displayController = (() => {
     }
 
     return {
-        playerChoose,
         updateScoreboard,
         computerPlay
     };
@@ -123,40 +115,52 @@ const player = (team) => {
     let score = 0;
     const resetScore = () => score = 0;
     const getScore = () => score;
-    const increaseScore = () => {
-        score += 1;
-        displayController.updateScoreboard();
+    const gameOver = (score) => {
         if (score === 3) {
             alert(`${team} has won!`)
             gameBoard.clearGame();
         }
+    }
+    const increaseScore = () => {
+        score += 1;
+        displayController.updateScoreboard();
+        gameOver(score);
         return score;
     }
-    
 
     return {team, resetScore, getScore, increaseScore};
 };
 
+const boardPieces = document.querySelectorAll(".board-piece");
 const btnX = document.getElementById("X");
 const btnO = document.getElementById("O");
+const btnStart = document.querySelector(".start");
+const playerMenu = document.querySelector(".players");
 let playerX = player("X");
 let playerO = player("O");
 let currentPlayer;
 let computerPlayer;
-const btnStart = document.querySelector(".start");
 
 btnStart.addEventListener("click", () => {
+    playerMenu.style.visibility = "visible";
+    document.querySelector(".upper-menu").style.visibility = "hidden";
+    document.querySelector(".game-board").style.visibility = "hidden";
     gameBoard.clearGame();
 })
 
 btnX.addEventListener("click", () => {
+    playerMenu.style.visibility = "hidden";
+    document.querySelector(".upper-menu").style.visibility = "visible";
+    document.querySelector(".game-board").style.visibility = "visible";
     currentPlayer = playerX;
     computerPlayer = playerO;
     gameBoard.clearGame();
 })
 
 btnO.addEventListener("click", () => {
-    currentPlayer = playerO;
+    playerMenu.style.visibility = "hidden";
+    document.querySelector(".upper-menu").style.visibility = "visible";    currentPlayer = playerO;
+    document.querySelector(".game-board").style.visibility = "visible";    currentPlayer = playerO;
     computerPlayer = playerX;
     gameBoard.clearGame();
 })
@@ -167,6 +171,6 @@ boardPieces.forEach(key => key.addEventListener("click", () => {
         gameBoard.checkWin(currentPlayer);
         setTimeout(() => {
             displayController.computerPlay()
-        }, 500);
+        }, 100);
     }
 }));
